@@ -9,6 +9,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -18,14 +20,14 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 
+import co.natalia.parcialeco1.model.Nombre;
+import co.natalia.parcialeco1.model.TCPCliente;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private TextView nameText;
     private Button continuarBtn;
-
-    private Socket socket;
-    private BufferedReader reader;
-    private BufferedWriter writer;
+    private TCPCliente tcpCliente;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,55 +39,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         continuarBtn.setOnClickListener(this);
 
-        initClient();
-    }
-
-    public void initClient() {
-        new Thread(() -> {
-            try {
-                Log.e("hi", "practicandolalloracionconjhon");
-                // 2. enviando conexion
-                socket = new Socket("192.168.0.4", 7000);
-                // 3.cliente y servidor conectados
-                Log.e("666","Conectados");
-
-                InputStream is = socket.getInputStream();
-                InputStreamReader isr = new InputStreamReader(is);
-
-                reader = new BufferedReader(isr);
-
-                OutputStream os = socket.getOutputStream();
-                OutputStreamWriter osw = new OutputStreamWriter(os);
-
-                writer = new BufferedWriter(osw);
-
-                while (true) {
-                    System.out.println("Esperando...");
-                    String line = reader.readLine();
-                    Log.e("666", "Recibido: " + line);
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
-
-        ).start();
-    }
-
-    public void SendMessage(String msg) {
-        new Thread(() -> {
-            try {
-                writer.write(msg + "\n");
-                writer.flush();
-
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-        }).start();
+        tcpCliente = TCPCliente.getInstance();
 
     }
 
@@ -95,6 +49,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (view.getId()){
             case R.id.continuarBtn:
+                Gson gson = new Gson();
+                Nombre nombre = new Nombre(nameText.getText().toString());
+
+                String msg = gson.toJson(nombre);
+                tcpCliente.SendMessage(msg);
+
                 Intent i = new Intent(this, Activity2.class);
                 startActivity(i);
                 break;
